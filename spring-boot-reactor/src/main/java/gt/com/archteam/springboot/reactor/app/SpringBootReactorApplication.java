@@ -20,8 +20,9 @@ public class SpringBootReactorApplication implements CommandLineRunner {
 	@Override
 	public void run(String... args) throws Exception {
 		var nombres = Flux
-				.just("Andres Guzman", "Pedro Velasquez", "Diego Rodriguez", "Juan Lopez", "Bruce Lee", "Bruce Willis")
-				.map(nombre -> new Usuario(nombre.split(" ")[0].toUpperCase(), nombre.split(" ")[1].toUpperCase()))
+				.just("Andres Guzman", "Pedro Velasquez", "Diego Rodriguez", "Juan Lopez", "Bruce Lee", "Bruce Willis");
+
+		var usuarios = nombres.map(nombre -> new Usuario(nombre.split(" ")[0].toUpperCase(), nombre.split(" ")[1].toUpperCase()))
 				.filter(usuario -> usuario.getNombre().equalsIgnoreCase("bruce"))
 				.doOnNext(usuario -> {
 					if (usuario == null) {
@@ -31,7 +32,7 @@ public class SpringBootReactorApplication implements CommandLineRunner {
 				})
 				.map(usuario -> usuario.getNombre().toLowerCase());
 		/* Si no se subscribe al objeto no va a mostrar nada... */
-		nombres.subscribe(log::info, error -> log.error(error.getMessage()), new Runnable() {
+		usuarios.subscribe(log::info, error -> log.error(error.getMessage()), new Runnable() {
 
 			@Override
 			public void run() {
