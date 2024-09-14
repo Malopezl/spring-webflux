@@ -25,7 +25,41 @@ public class SpringBootReactorApplication implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) throws Exception {
-		ejemploUsuarioComentariosFlatMap();
+		ejemploUsuarioComentariosZipWithForma2();
+	}
+
+	public void ejemploUsuarioComentariosZipWithForma2() throws Exception {
+		var usuarioMono = Mono.fromCallable(() -> new Usuario("John", "Doe"));
+		var comentariosUsuarioMono = Mono.fromCallable(() -> {
+			Comentarios comentarios = new Comentarios();
+			comentarios.addComentario("Hola mundo!");
+			comentarios.addComentario("Adios mundo!");
+			comentarios.addComentario("Comentarios pruebas");
+			return comentarios;
+		});
+
+		/* Esta forma genera una tupla con los tipos de datos y se obtienen de esta forma */
+		var usuarioComentarios = usuarioMono.zipWith(comentariosUsuarioMono)
+		.map(tuple -> {
+			var usuario = tuple.getT1();
+			var comentarios = tuple.getT2();
+			return new UsuarioComentarios(usuario, comentarios);
+		});
+		usuarioComentarios.subscribe(uc -> log.info(uc.toString()));
+	}
+
+	public void ejemploUsuarioComentariosZipWith() throws Exception {
+		var usuarioMono = Mono.fromCallable(() -> new Usuario("John", "Doe"));
+		var comentariosUsuarioMono = Mono.fromCallable(() -> {
+			Comentarios comentarios = new Comentarios();
+			comentarios.addComentario("Hola mundo!");
+			comentarios.addComentario("Adios mundo!");
+			comentarios.addComentario("Comentarios pruebas");
+			return comentarios;
+		});
+
+		var usuarioComentarios = usuarioMono.zipWith(comentariosUsuarioMono, UsuarioComentarios::new);
+		usuarioComentarios.subscribe(uc -> log.info(uc.toString()));
 	}
 
 	public void ejemploUsuarioComentariosFlatMap() throws Exception {
