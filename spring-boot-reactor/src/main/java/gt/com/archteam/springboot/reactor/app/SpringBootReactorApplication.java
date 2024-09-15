@@ -1,7 +1,9 @@
 package gt.com.archteam.springboot.reactor.app;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,17 +27,61 @@ public class SpringBootReactorApplication implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) throws Exception {
-		ejemploZipWithRangos();
+		ejemploInfiniteInterval();
 	}
 
-	public void ejemploZipWithRangos() throws Exception {
+	public void ejemploInfiniteInterval() throws InterruptedException {
+		var latch = new CountDownLatch(1);
+
+		Flux.interval(Duration.ofSeconds(1))
+				.doOnTerminate(latch::countDown)
+				.flatMap(i -> {
+					if (i >= 5) {
+						return Flux.error(new InterruptedException("Solo hasta 5"));
+					}
+					return Flux.just(i);
+				})
+				.map(i -> "Hola " + i)
+				.retry(2)
+				.subscribe(log::info, e -> log.error(e.getMessage()));
+
+		latch.await();
+	}
+
+	public void ejemploDelayElements() {
+		var rango = Flux.range(1, 12)
+				.delayElements(Duration.ofSeconds(1))
+				.doOnNext(i -> log.info(i.toString()));
+
+		rango.subscribe();
+		// rango.blockLast();
+	}
+
+	public void ejemploInterval() {
+		var rango = Flux.range(1, 12);
+		var retraso = Flux.interval(Duration.ofSeconds(1));
+
+		/*
+		 * Aunque la ejecucion termina, el proceso se sigue ejecutando en segundo plano
+		 */
+		rango.zipWith(retraso, (range, delay) -> range)
+				.doOnNext(i -> log.info(i.toString()))
+				// .subscribe();
+				/*
+				 * Se utiliza esta funcion solo para poder visualizar el proceso pero no se
+				 * recomienda porque puede generar cuellos de botella.
+				 */
+				.blockLast();
+	}
+
+	public void ejemploZipWithRangos() {
 		Flux.just(1, 2, 3, 4)
 				.map(i -> (i * 2))
 				.zipWith(Flux.range(0, 4), (uno, dos) -> String.format("Primer Flux: %d, Segundo Flux: %d", uno, dos))
 				.subscribe(log::info);
 	}
 
-	public void ejemploUsuarioComentariosZipWithForma2() throws Exception {
+	public void ejemploUsuarioComentariosZipWithForma2() {
 		var usuarioMono = Mono.fromCallable(() -> new Usuario("John", "Doe"));
 		var comentariosUsuarioMono = Mono.fromCallable(() -> {
 			Comentarios comentarios = new Comentarios();
@@ -55,7 +101,7 @@ public class SpringBootReactorApplication implements CommandLineRunner {
 		usuarioComentarios.subscribe(uc -> log.info(uc.toString()));
 	}
 
-	public void ejemploUsuarioComentariosZipWith() throws Exception {
+	public void ejemploUsuarioComentariosZipWith() {
 		var usuarioMono = Mono.fromCallable(() -> new Usuario("John", "Doe"));
 		var comentariosUsuarioMono = Mono.fromCallable(() -> {
 			Comentarios comentarios = new Comentarios();
@@ -69,7 +115,7 @@ public class SpringBootReactorApplication implements CommandLineRunner {
 		usuarioComentarios.subscribe(uc -> log.info(uc.toString()));
 	}
 
-	public void ejemploUsuarioComentariosFlatMap() throws Exception {
+	public void ejemploUsuarioComentariosFlatMap() {
 		var usuarioMono = Mono.fromCallable(() -> new Usuario("John", "Doe"));
 		var comentariosUsuarioMono = Mono.fromCallable(() -> {
 			Comentarios comentarios = new Comentarios();
@@ -83,7 +129,7 @@ public class SpringBootReactorApplication implements CommandLineRunner {
 		.subscribe(uc -> log.info(uc.toString()));
 	}
 
-	public void ejemploCollectList() throws Exception {
+	public void ejemploCollectList() {
 		List<Usuario> usuariosList = new ArrayList<>();
 		usuariosList.add(new Usuario("Andres", "Guzman"));
 		usuariosList.add(new Usuario("Pedro", "Rodriguez"));
@@ -97,7 +143,7 @@ public class SpringBootReactorApplication implements CommandLineRunner {
 				.subscribe(lista -> lista.forEach(item -> log.info(item.toString())));
 	}
 
-	public void ejemploToString() throws Exception {
+	public void ejemploToString() {
 		List<Usuario> usuariosList = new ArrayList<>();
 		usuariosList.add(new Usuario("Andres", "Guzman"));
 		usuariosList.add(new Usuario("Pedro", "Rodriguez"));
@@ -119,7 +165,7 @@ public class SpringBootReactorApplication implements CommandLineRunner {
 				.subscribe(log::info);
 	}
 
-	public void ejemploFlatMap() throws Exception {
+	public void ejemploFlatMap() {
 		List<String> usuariosList = new ArrayList<>();
 		usuariosList.add("Andres Guzman");
 		usuariosList.add("Pedro Velasquez");
@@ -140,7 +186,7 @@ public class SpringBootReactorApplication implements CommandLineRunner {
 				.subscribe(log::info);
 	}
 
-	public void ejemploIterable() throws Exception {
+	public void ejemploIterable() {
 		List<String> usuariosList = new ArrayList<>();
 		usuariosList.add("Andres Guzman");
 		usuariosList.add("Pedro Velasquez");
