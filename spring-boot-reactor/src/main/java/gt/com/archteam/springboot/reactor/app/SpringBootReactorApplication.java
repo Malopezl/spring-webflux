@@ -3,10 +3,13 @@ package gt.com.archteam.springboot.reactor.app;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.CountDownLatch;
 
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
@@ -29,7 +32,45 @@ public class SpringBootReactorApplication implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) throws Exception {
-		ejemploCreateInterval();
+		ejemploBackPressure();
+	}
+
+	public void ejemploBackPressure() {
+		Flux.range(1, 10)
+				.log()
+				.limitRate(5)
+				.subscribe(/*new Subscriber<Integer>() {
+					private Subscription s;
+					private Integer limite = 2;
+					private Integer consumido = 0;
+
+					@Override
+					public void onSubscribe(Subscription s) {
+						this.s = s;
+						s.request(limite);
+					}
+
+					@Override
+					public void onNext(Integer t) {
+						log.info(t.toString());
+						consumido++;
+						if (Objects.equals(consumido, limite)) {
+							consumido = 0;
+							s.request(limite);
+						}
+					}
+
+					@Override
+					public void onError(Throwable t) {
+						// TODO Auto-generated method stub
+					}
+
+					@Override
+					public void onComplete() {
+						// TODO Auto-generated method stub
+					}
+					
+				}*/);
 	}
 
 	public void ejemploCreateInterval() {
